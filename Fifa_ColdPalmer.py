@@ -1,3 +1,5 @@
+print(__doc__)
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -55,6 +57,16 @@ def process_data(df):
 
     return df
 
+for col in df.columns[5:39]:
+    df[col] = df[col].apply(lambda x: float(str(x)[:2]))
+
+gk_df = df[df['Preferred Position'] == 'GK']
+field_players_df = df[df['Preferred Position'] != 'GK']
+
+field_players_df = field_players_df.drop(columns=['GK diving', 'GK handling', 'GK kicking', 'GK positioning', 'GK reflexes'])
+
+gk_df = gk_df[['UID', 'Name', 'Age', 'Overall', 'Value', 'GK diving', 'GK handling', 'GK kicking', 'GK positioning', 'GK reflexes']]
+
 df = pd.get_dummies(df)
 
 print(df.isnull().sum())
@@ -64,11 +76,11 @@ train, test = train_test_split(df, test_size = 0.2)
 # Cleaned dataset with unnecessary columns
 df.to_csv("../fifa_cleaned_trained.csv")
 
-x_train = train.drop("overall", axis =1)
-y_train = train['overall']
+x_train = train.drop("Potential", axis =1)
+y_train = train['Potential']
 
-x_test = test.drop("overall", axis =1)
-y_test = test['overall']
+x_test = test.drop("Potential", axis =1)
+y_test = test['Potential']
 
 rmse_val = []
 
