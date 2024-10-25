@@ -47,6 +47,10 @@ df.drop(['RS'], axis=1, inplace = True)
 df.drop(['RW'], axis=1, inplace = True)
 df.drop(['RWB'], axis=1, inplace = True)
 df.drop(['ST'], axis=1, inplace = True)
+df.drop(['Nationality'], axis=1, inplace = True)
+df.drop(['Club Logo'], axis=1, inplace = True)
+df.drop(['Special'], axis=1, inplace = True)
+df.drop(['Wages'], axis=1, inplace = True)
 
 def process_data(df):
     # Removing first 7 characters from the column
@@ -71,16 +75,24 @@ df = pd.get_dummies(df)
 
 print(df.isnull().sum())
 
-train, test = train_test_split(df, test_size = 0.2)
+gk_train, gk_test = train_test_split(gk_df, test_size = 0.2)
+fp_train, fp_test = train_test_split(field_players_df, test_size = 0.2)
 
 # Cleaned dataset with unnecessary columns
-df.to_csv("../fifa_cleaned_trained.csv")
+gk_df.to_csv("../fifaGK_cleaned_trained.csv")
+field_players_df.to_csv("../fifaFP_cleaned_trained.csv")
 
-x_train = train.drop("Potential", axis =1)
-y_train = train['Potential']
+x_train = gk_train.drop("Potential", axis =1)
+y_train = gk_train['Potential']
 
-x_test = test.drop("Potential", axis =1)
-y_test = test['Potential']
+x2_train = fp_train.drop('Potential', axis = 1)
+y2_train = fp_train['Potential']
+
+x_test = gk_test.drop("Potential", axis =1)
+y_test = gk_test['Potential']
+
+x2_test = fp_test.drop('Potential', axis = 1)
+y2_test = fp_test.drop('Potential', axis = 1)
 
 rmse_val = []
 
@@ -90,6 +102,15 @@ for k in range(20):
     model.fit(x_train, y_train)
     prediction = model.predict(x_test)
     error = sqrt(mean_squared_error(y_test, prediction))
+    rmse_val.append(error)
+    print('RMSE value for k = ' , k , 'is:', error)
+
+for k in range(20):
+    k = k+1
+    model_fp = neighbors.KNeighborsRegressor(n_neighbors= k)
+    model_fp.fit(x2_train, y2_train)
+    prediction_fp = model_fp.predict(x2_test)
+    error = sqrt(mean_squared_error(y2_test, prediction_fp))
     rmse_val.append(error)
     print('RMSE value for k = ' , k , 'is:', error)
 
@@ -105,15 +126,31 @@ print('predictions: \n', prediction, '\n')
 print(y_test, '\n')
 print('score: ', evaluation, '\n')
 
-test.to_csv('../test.csv')
+k = 9
+model_fp = neighbors.KNeighborsRegressor(n_neighbors= k)
+model_fp.fit(x2_train, y2_train)
+prediction_fp = model_fp.predict(x2_test)
+evaluation_fp = model_fp.score(x2_test, y2_test)
+print('predictions: \n', prediction_fp, '\n')
+print(y2_test, '\n')
+print('score: ', evaluation_fp, '\n')
+
+gk_test.to_csv('../test.csv')
 y_test.to_csv("../y_test.csv")
+
+fp_test.to_csv('../fp_test.csv')
+y2_test.to_csv('../y2_test.csv')
 
 predictions = pd.DataFrame(prediction, columns = ['overall_prediction'])
 predictions.to_csv('../predictions.csv', index = False)
 
+prediction_fp = pd.DataFrame(prediction_fp, columns = ['overall_prediction'])
+prediction_fp.to_csv('../predictions_fp.csv', index = False)
+
 new_test = pd.read_csv('../fifa_test.csv')
 submission = pd.read_csv("../fifa_cleaned_trained.csv")
 # Still need to join the datasets
+
 
 # Add joined columns to formula
 new_test.drop
